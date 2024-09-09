@@ -36,6 +36,26 @@ def save_to_db(name, age, grade):
     conn.commit()
     conn.close()
 
+# Функция для получения всех студентов из базы данных
+def get_all_students():
+    conn = sqlite3.connect('school_data.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM students')
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
+
+# Хэндлер для команды /list
+@dp.message(Command('list'))
+async def list_students(message: types.Message):
+    students = get_all_students()
+    if students:
+        # Форматирование вывода
+        result = "\n".join([f"ID: {student[0]}, Имя: {student[1]}, Возраст: {student[2]}, Класс: {student[3]}" for student in students])
+        await message.answer(result)
+    else:
+        await message.answer("Список студентов пуст.")
+
 # Определение машины состояний
 class StudentForm(StatesGroup):
     name = State()
@@ -80,6 +100,8 @@ async def get_grade(message: types.Message, state: FSMContext):
 
     await message.answer(f"Спасибо! Данные сохранены:\nИмя: {name}\nВозраст: {age}\nКласс: {grade}")
     await state.clear()  # Очищаем состояние после завершения
+
+
 
 # Запуск бота
 async def main():
